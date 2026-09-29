@@ -2,7 +2,6 @@ import json
 import os
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import HTMLResponse, JSONResponse
-from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from typing import List, Optional
 
@@ -10,9 +9,8 @@ from app.scraper import ProfileAnalyzer
 from app.dating_engine import DatingEngine
 from app.rankings import RankingManager
 
-app = FastAPI(title="Agentic Dating Site", version="1.0.0")
+app = FastAPI(title="Agentic Dating Site", version="2.0.0")
 
-# Path to seed data
 DATA_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "people.json")
 
 def load_people():
@@ -51,10 +49,7 @@ async def analyze_profile(req: IngestRequest):
         raise HTTPException(status_code=400, detail="Both LinkedIn and Instagram URLs are required")
     
     profile = await ProfileAnalyzer.analyze_urls(req.linkedin_url, req.instagram_url)
-    
-    # Save to data list
     people = load_people()
-    # Check if already exists by link
     existing = next((p for p in people if p["linkedin_url"] == req.linkedin_url), None)
     if not existing:
         people.insert(0, profile)
@@ -96,7 +91,7 @@ def index(request: Request):
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Agentic Dating App — Autonomous AI Matchmaking</title>
+    <title>Agentic Dating Platform — Autonomous AI Dating Arena</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Lucide Icons -->
@@ -105,59 +100,68 @@ def index(request: Request):
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
         body {
             font-family: 'Plus Jakarta Sans', sans-serif;
-            background-color: #0f172a;
+            background-color: #0b0f19;
             color: #f8fafc;
         }
         .glass-panel {
-            background: rgba(30, 41, 59, 0.7);
+            background: rgba(17, 24, 39, 0.75);
             backdrop-filter: blur(16px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.08);
         }
         .gradient-text {
-            background: linear-gradient(135deg, #ec4899 0%, #8b5cf6 50%, #3b82f6 100%);
+            background: linear-gradient(135deg, #f43f5e 0%, #a855f7 50%, #3b82f6 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
         }
         .tab-btn.active {
-            background: linear-gradient(135deg, #ec4899 0%, #8b5cf6 100%);
+            background: linear-gradient(135deg, #f43f5e 0%, #a855f7 100%);
             color: white;
-            box-shadow: 0 4px 20px rgba(236, 72, 153, 0.3);
+            box-shadow: 0 4px 20px rgba(244, 63, 94, 0.35);
         }
         .chat-bubble {
-            animation: fadeIn 0.3s ease-in-out forwards;
+            animation: slideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(8px); }
-            to { opacity: 1; transform: translateY(0); }
+        @keyframes slideUp {
+            from { opacity: 0; transform: translateY(12px) scale(0.98); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+        .typing-dot {
+            animation: pulse 1.2s infinite ease-in-out;
+        }
+        .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+        @keyframes pulse {
+            0%, 100% { opacity: 0.3; transform: scale(0.8); }
+            50% { opacity: 1; transform: scale(1.1); }
         }
     </style>
 </head>
 <body class="min-h-screen flex flex-col">
 
     <!-- Header Navigation -->
-    <header class="glass-panel sticky top-0 z-50 px-6 py-4 flex flex-wrap items-center justify-between border-b border-slate-800">
+    <header class="glass-panel sticky top-0 z-50 px-6 py-4 flex flex-wrap items-center justify-between border-b border-slate-800/80">
         <div class="flex items-center gap-3">
-            <div class="p-2.5 bg-gradient-to-tr from-pink-500 to-purple-600 rounded-xl shadow-lg shadow-pink-500/20">
+            <div class="p-2.5 bg-gradient-to-tr from-rose-500 to-purple-600 rounded-2xl shadow-lg shadow-rose-500/25">
                 <i data-lucide="heart-handshake" class="w-6 h-6 text-white"></i>
             </div>
             <div>
-                <h1 class="text-xl font-bold tracking-tight gradient-text">Agentic Dating Site</h1>
+                <h1 class="text-xl font-extrabold tracking-tight gradient-text">Agentic Dating Site</h1>
                 <p class="text-xs text-slate-400">Autonomous AI Agents Dating on Behalf of Real People</p>
             </div>
         </div>
 
-        <!-- Tabs Navigation -->
-        <nav class="flex items-center gap-2 mt-4 sm:mt-0 bg-slate-900/60 p-1.5 rounded-xl border border-slate-800">
-            <button onclick="switchTab('directory')" id="tab-directory" class="tab-btn active px-4 py-2 text-sm font-medium rounded-lg transition-all flex items-center gap-2">
-                <i data-lucide="users" class="w-4 h-4"></i> 25 Profiles
-            </button>
-            <button onclick="switchTab('arena')" id="tab-arena" class="tab-btn px-4 py-2 text-sm font-medium text-slate-400 hover:text-white rounded-lg transition-all flex items-center gap-2">
+        <!-- Navigation Tabs -->
+        <nav class="flex items-center gap-2 mt-4 sm:mt-0 bg-slate-900/80 p-1.5 rounded-2xl border border-slate-800">
+            <button onclick="switchTab('arena')" id="tab-arena" class="tab-btn active px-4 py-2 text-sm font-semibold rounded-xl transition-all flex items-center gap-2">
                 <i data-lucide="flame" class="w-4 h-4"></i> Live Dating Arena
             </button>
-            <button onclick="switchTab('rankings')" id="tab-rankings" class="tab-btn px-4 py-2 text-sm font-medium text-slate-400 hover:text-white rounded-lg transition-all flex items-center gap-2">
+            <button onclick="switchTab('directory')" id="tab-directory" class="tab-btn px-4 py-2 text-sm font-semibold text-slate-400 hover:text-white rounded-xl transition-all flex items-center gap-2">
+                <i data-lucide="users" class="w-4 h-4"></i> 25 Profiles
+            </button>
+            <button onclick="switchTab('rankings')" id="tab-rankings" class="tab-btn px-4 py-2 text-sm font-semibold text-slate-400 hover:text-white rounded-xl transition-all flex items-center gap-2">
                 <i data-lucide="trophy" class="w-4 h-4"></i> Match Rankings
             </button>
-            <button onclick="switchTab('ingest')" id="tab-ingest" class="tab-btn px-4 py-2 text-sm font-medium text-slate-400 hover:text-white rounded-lg transition-all flex items-center gap-2">
+            <button onclick="switchTab('ingest')" id="tab-ingest" class="tab-btn px-4 py-2 text-sm font-semibold text-slate-400 hover:text-white rounded-xl transition-all flex items-center gap-2">
                 <i data-lucide="link" class="w-4 h-4"></i> Ingest Links
             </button>
         </nav>
@@ -165,8 +169,127 @@ def index(request: Request):
 
     <main class="flex-1 max-w-7xl w-full mx-auto p-6">
 
-        <!-- VIEW 1: PROFILES DIRECTORY -->
-        <section id="view-directory" class="space-y-6">
+        <!-- VIEW 1: LIVE AGENT DATING ARENA -->
+        <section id="view-arena" class="space-y-6">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div>
+                    <h2 class="text-2xl font-bold">Live Agent Dating Arena</h2>
+                    <p class="text-sm text-slate-400">Watch two AI agents date in real-time on behalf of their real people.</p>
+                </div>
+                
+                <div class="flex items-center gap-3">
+                    <!-- Pace Selector -->
+                    <div class="bg-slate-900 border border-slate-800 p-1 rounded-xl flex items-center gap-1 text-xs">
+                        <span class="text-slate-400 px-2 font-medium">Speed:</span>
+                        <button onclick="setPace(1600, this)" class="pace-btn active bg-rose-500/20 text-rose-300 font-bold px-2.5 py-1 rounded-lg">1x (Video)</button>
+                        <button onclick="setPace(700, this)" class="pace-btn text-slate-400 hover:text-white px-2.5 py-1 rounded-lg">2x Fast</button>
+                        <button onclick="setPace(0, this)" class="pace-btn text-slate-400 hover:text-white px-2.5 py-1 rounded-lg">⚡ Instant</button>
+                    </div>
+
+                    <button onclick="speedDate()" class="px-4 py-2.5 bg-gradient-to-r from-rose-500 to-purple-600 hover:from-rose-600 hover:to-purple-700 rounded-xl text-sm font-bold flex items-center gap-2 shadow-lg shadow-rose-500/20">
+                        <i data-lucide="shuffle" class="w-4 h-4"></i> Random Speed Date
+                    </button>
+                </div>
+            </div>
+
+            <!-- Agent Selector Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="glass-panel p-5 rounded-3xl border border-rose-500/20">
+                    <label class="block text-xs font-bold text-rose-400 uppercase tracking-wider mb-2">Agent 1 (Person A)</label>
+                    <select id="select-person-1" onchange="previewAgent(1)" class="w-full bg-slate-900/90 border border-slate-700 rounded-2xl p-3 text-sm font-medium focus:outline-none focus:border-rose-500"></select>
+                </div>
+                <div class="glass-panel p-5 rounded-3xl border border-purple-500/20">
+                    <label class="block text-xs font-bold text-purple-400 uppercase tracking-wider mb-2">Agent 2 (Person B)</label>
+                    <select id="select-person-2" onchange="previewAgent(2)" class="w-full bg-slate-900/90 border border-slate-700 rounded-2xl p-3 text-sm font-medium focus:outline-none focus:border-purple-500"></select>
+                </div>
+            </div>
+
+            <div class="text-center">
+                <button onclick="startAnimatedDate()" id="btn-launch-date" class="px-10 py-3.5 bg-gradient-to-r from-rose-500 via-purple-600 to-blue-600 hover:opacity-95 rounded-2xl font-extrabold text-lg shadow-xl shadow-purple-500/25 inline-flex items-center gap-3 transition-transform active:scale-95">
+                    <i data-lucide="sparkles" class="w-5 h-5"></i> Launch Agent Date Stream
+                </button>
+            </div>
+
+            <!-- Date Viewer Window -->
+            <div id="date-window" class="hidden glass-panel rounded-3xl p-6 border border-slate-800 space-y-6 shadow-2xl">
+                
+                <!-- Date Location Header & Live Compatibility Gauge -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-center p-4 bg-slate-900/90 rounded-2xl border border-slate-800">
+                    <div>
+                        <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Date Setting & Location</span>
+                        <h4 id="date-location-name" class="text-sm font-extrabold text-slate-100 flex items-center gap-1.5 mt-0.5">☕ Artisan Espresso Bar</h4>
+                        <p id="date-location-city" class="text-xs text-slate-400">San Francisco, CA</p>
+                    </div>
+
+                    <div class="text-center">
+                        <span class="text-[10px] font-bold text-rose-400 uppercase tracking-wider block mb-1">Live Spark Gauge</span>
+                        <div class="w-full bg-slate-800 h-3 rounded-full overflow-hidden p-0.5 border border-slate-700">
+                            <div id="gauge-bar" class="bg-gradient-to-r from-rose-500 via-purple-500 to-emerald-400 h-full rounded-full transition-all duration-700 ease-out" style="width: 0%"></div>
+                        </div>
+                        <span id="date-score-label" class="text-xs font-black text-slate-200 mt-1 inline-block">0% Match</span>
+                    </div>
+
+                    <div class="text-right">
+                        <span id="date-vibe-badge" class="px-3 py-1.5 bg-rose-500/20 text-rose-300 border border-rose-500/30 rounded-full text-xs font-bold inline-block">Initializing Date...</span>
+                    </div>
+                </div>
+
+                <!-- Chat Stream Window -->
+                <div id="chat-container" class="space-y-6 max-h-[500px] overflow-y-auto p-5 bg-slate-950/80 rounded-2xl border border-slate-900">
+                    <!-- Dynamic animated chat bubbles -->
+                </div>
+
+                <!-- Typing Indicator Banner -->
+                <div id="typing-indicator" class="hidden flex items-center gap-3 p-3 bg-slate-900/60 rounded-xl text-xs text-slate-400">
+                    <img id="typing-avatar" src="" class="w-6 h-6 rounded-full object-cover">
+                    <span id="typing-name" class="font-bold text-slate-200">Agent</span> is thinking...
+                    <div class="flex items-center gap-1">
+                        <div class="w-1.5 h-1.5 bg-rose-400 rounded-full typing-dot"></div>
+                        <div class="w-1.5 h-1.5 bg-purple-400 rounded-full typing-dot"></div>
+                        <div class="w-1.5 h-1.5 bg-blue-400 rounded-full typing-dot"></div>
+                    </div>
+                </div>
+
+                <!-- Post-Date Breakdown & Agent Debrief Cards -->
+                <div id="debrief-container" class="hidden space-y-4">
+                    <!-- Multi-Factor Radar Stats -->
+                    <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-center">
+                        <div class="p-3 bg-slate-900/80 border border-slate-800 rounded-xl">
+                            <span class="text-[10px] font-bold text-rose-400 uppercase tracking-wider block">Chemistry</span>
+                            <strong id="stat-chem" class="text-lg font-black gradient-text">--%</strong>
+                        </div>
+                        <div class="p-3 bg-slate-900/80 border border-slate-800 rounded-xl">
+                            <span class="text-[10px] font-bold text-purple-400 uppercase tracking-wider block">Intellectual</span>
+                            <strong id="stat-intel" class="text-lg font-black text-purple-300">--%</strong>
+                        </div>
+                        <div class="p-3 bg-slate-900/80 border border-slate-800 rounded-xl">
+                            <span class="text-[10px] font-bold text-blue-400 uppercase tracking-wider block">Fun & Banter</span>
+                            <strong id="stat-fun" class="text-lg font-black text-blue-300">--%</strong>
+                        </div>
+                        <div class="p-3 bg-slate-900/80 border border-slate-800 rounded-xl">
+                            <span class="text-[10px] font-bold text-emerald-400 uppercase tracking-wider block">Long-Term</span>
+                            <strong id="stat-long" class="text-lg font-black text-emerald-300">--%</strong>
+                        </div>
+                    </div>
+
+                    <!-- Debrief Reviews -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="p-4 bg-rose-950/20 border border-rose-900/40 rounded-2xl">
+                            <h4 id="debrief-title-1" class="text-xs font-bold text-rose-400 uppercase tracking-wider mb-1">Agent 1 Verdict</h4>
+                            <p id="debrief-text-1" class="text-sm text-slate-300 font-medium"></p>
+                        </div>
+                        <div class="p-4 bg-purple-950/20 border border-purple-900/40 rounded-2xl">
+                            <h4 id="debrief-title-2" class="text-xs font-bold text-purple-400 uppercase tracking-wider mb-1">Agent 2 Verdict</h4>
+                            <p id="debrief-text-2" class="text-sm text-slate-300 font-medium"></p>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- VIEW 2: PROFILES DIRECTORY -->
+        <section id="view-directory" class="hidden space-y-6">
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
                     <h2 class="text-2xl font-bold">Directory of Real Profiles</h2>
@@ -175,77 +298,12 @@ def index(request: Request):
                 <div class="flex items-center gap-3 w-full sm:w-auto">
                     <div class="relative flex-1 sm:w-64">
                         <i data-lucide="search" class="w-4 h-4 absolute left-3 top-3 text-slate-500"></i>
-                        <input type="text" id="search-input" onkeyup="filterProfiles()" placeholder="Search by name, hobby, skill..." class="w-full bg-slate-900 border border-slate-700 rounded-xl pl-9 pr-4 py-2 text-sm focus:outline-none focus:border-pink-500">
+                        <input type="text" id="search-input" onkeyup="filterProfiles()" placeholder="Search name, hobby, skill..." class="w-full bg-slate-900 border border-slate-700 rounded-xl pl-9 pr-4 py-2 text-sm focus:outline-none focus:border-rose-500">
                     </div>
                 </div>
             </div>
 
-            <!-- Profile Cards Grid -->
-            <div id="profiles-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <!-- Dynamically populated via JavaScript -->
-            </div>
-        </section>
-
-        <!-- VIEW 2: LIVE AGENT DATING ARENA -->
-        <section id="view-arena" class="hidden space-y-6">
-            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                <div>
-                    <h2 class="text-2xl font-bold">Live Agent Dating Arena</h2>
-                    <p class="text-sm text-slate-400">Select two agents and watch them date on behalf of their real people.</p>
-                </div>
-                <button onclick="speedDate()" class="px-4 py-2 bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 rounded-xl text-sm font-semibold flex items-center gap-2 shadow-lg shadow-pink-500/20">
-                    <i data-lucide="shuffle" class="w-4 h-4"></i> Random Speed Date
-                </button>
-            </div>
-
-            <!-- Selector Row -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div class="glass-panel p-5 rounded-2xl">
-                    <label class="block text-xs font-semibold text-pink-400 uppercase tracking-wider mb-2">Person A (Agent 1)</label>
-                    <select id="select-person-1" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm focus:outline-none focus:border-pink-500"></select>
-                </div>
-                <div class="glass-panel p-5 rounded-2xl">
-                    <label class="block text-xs font-semibold text-purple-400 uppercase tracking-wider mb-2">Person B (Agent 2)</label>
-                    <select id="select-person-2" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-sm focus:outline-none focus:border-purple-500"></select>
-                </div>
-            </div>
-
-            <div class="text-center">
-                <button onclick="startSimulatedDate()" class="px-8 py-3 bg-gradient-to-r from-pink-500 via-purple-600 to-blue-600 hover:opacity-95 rounded-xl font-bold text-lg shadow-xl shadow-purple-500/20 inline-flex items-center gap-3">
-                    <i data-lucide="sparkles" class="w-5 h-5"></i> Launch Agent Date
-                </button>
-            </div>
-
-            <!-- Date Viewer Window -->
-            <div id="date-window" class="hidden glass-panel rounded-2xl p-6 border border-slate-800 space-y-6">
-                <!-- Chemistry Bar -->
-                <div class="flex flex-col sm:flex-row items-center justify-between gap-4 p-4 bg-slate-900/80 rounded-xl border border-slate-800">
-                    <div class="flex items-center gap-3">
-                        <span id="date-vibe-badge" class="px-3 py-1 bg-pink-500/20 text-pink-300 border border-pink-500/30 rounded-full text-xs font-bold">Calculating...</span>
-                        <span id="date-score" class="text-2xl font-black gradient-text">--% Match</span>
-                    </div>
-                    <div class="flex items-center gap-2 text-xs text-slate-400">
-                        <i data-lucide="activity" class="w-4 h-4 text-emerald-400"></i> Active Dialogue Engine
-                    </div>
-                </div>
-
-                <!-- Chat Dialogue Container -->
-                <div id="chat-container" class="space-y-4 max-h-[450px] overflow-y-auto p-4 bg-slate-950/60 rounded-xl border border-slate-900">
-                    <!-- Chat bubbles injected here -->
-                </div>
-
-                <!-- Agent Debrief Cards -->
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div class="p-4 bg-pink-950/20 border border-pink-900/50 rounded-xl">
-                        <h4 id="debrief-title-1" class="text-xs font-bold text-pink-400 uppercase tracking-wider mb-1">Agent 1 Debrief</h4>
-                        <p id="debrief-text-1" class="text-sm text-slate-300 font-medium">Waiting for date completion...</p>
-                    </div>
-                    <div class="p-4 bg-purple-950/20 border border-purple-900/50 rounded-xl">
-                        <h4 id="debrief-title-2" class="text-xs font-bold text-purple-400 uppercase tracking-wider mb-1">Agent 2 Debrief</h4>
-                        <p id="debrief-text-2" class="text-sm text-slate-300 font-medium">Waiting for date completion...</p>
-                    </div>
-                </div>
-            </div>
+            <div id="profiles-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
         </section>
 
         <!-- VIEW 3: MATCH RANKINGS MATRIX -->
@@ -255,15 +313,14 @@ def index(request: Request):
                     <h2 class="text-2xl font-bold">Match Compatibility Rankings</h2>
                     <p class="text-sm text-slate-400">Rankings calculated by evaluating agent dating compatibility for every person.</p>
                 </div>
-                <select id="ranking-person-select" onchange="renderRankingsForSelected()" class="bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-sm focus:outline-none focus:border-pink-500 sm:w-72"></select>
+                <select id="ranking-person-select" onchange="renderRankingsForSelected()" class="bg-slate-900 border border-slate-700 rounded-xl px-4 py-2 text-sm focus:outline-none focus:border-rose-500 sm:w-72"></select>
             </div>
 
-            <!-- Rankings Table -->
-            <div class="glass-panel rounded-2xl overflow-hidden border border-slate-800">
+            <div class="glass-panel rounded-3xl overflow-hidden border border-slate-800">
                 <div class="overflow-x-auto">
                     <table class="w-full text-left border-collapse">
                         <thead>
-                            <tr class="bg-slate-900/80 border-b border-slate-800 text-xs text-slate-400 uppercase tracking-wider">
+                            <tr class="bg-slate-900/90 border-b border-slate-800 text-xs text-slate-400 uppercase tracking-wider">
                                 <th class="p-4">Rank</th>
                                 <th class="p-4">Match Candidate</th>
                                 <th class="p-4">Headline</th>
@@ -272,9 +329,7 @@ def index(request: Request):
                                 <th class="p-4 text-right">Action</th>
                             </tr>
                         </thead>
-                        <tbody id="rankings-table-body" class="divide-y divide-slate-800 text-sm">
-                            <!-- Injected dynamically -->
-                        </tbody>
+                        <tbody id="rankings-table-body" class="divide-y divide-slate-800 text-sm"></tbody>
                     </table>
                 </div>
             </div>
@@ -292,19 +347,19 @@ def index(request: Request):
                     <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">Public LinkedIn Profile URL</label>
                     <div class="relative">
                         <i data-lucide="linkedin" class="w-5 h-5 absolute left-3.5 top-3.5 text-blue-400"></i>
-                        <input type="url" id="ingest-linkedin" required placeholder="https://www.linkedin.com/in/username" class="w-full bg-slate-900 border border-slate-700 rounded-xl pl-11 pr-4 py-3 text-sm focus:outline-none focus:border-pink-500">
+                        <input type="url" id="ingest-linkedin" required placeholder="https://www.linkedin.com/in/username" class="w-full bg-slate-900 border border-slate-700 rounded-xl pl-11 pr-4 py-3 text-sm focus:outline-none focus:border-rose-500">
                     </div>
                 </div>
 
                 <div>
                     <label class="block text-xs font-semibold text-slate-300 uppercase tracking-wider mb-2">Public Instagram Profile URL</label>
                     <div class="relative">
-                        <i data-lucide="instagram" class="w-5 h-5 absolute left-3.5 top-3.5 text-pink-500"></i>
-                        <input type="url" id="ingest-instagram" required placeholder="https://www.instagram.com/username/" class="w-full bg-slate-900 border border-slate-700 rounded-xl pl-11 pr-4 py-3 text-sm focus:outline-none focus:border-pink-500">
+                        <i data-lucide="instagram" class="w-5 h-5 absolute left-3.5 top-3.5 text-rose-500"></i>
+                        <input type="url" id="ingest-instagram" required placeholder="https://www.instagram.com/username/" class="w-full bg-slate-900 border border-slate-700 rounded-xl pl-11 pr-4 py-3 text-sm focus:outline-none focus:border-rose-500">
                     </div>
                 </div>
 
-                <button type="submit" id="btn-ingest-submit" class="w-full py-3.5 bg-gradient-to-r from-pink-500 to-purple-600 hover:from-pink-600 hover:to-purple-700 rounded-xl font-bold text-white shadow-lg shadow-pink-500/25 flex items-center justify-center gap-2">
+                <button type="submit" id="btn-ingest-submit" class="w-full py-3.5 bg-gradient-to-r from-rose-500 to-purple-600 hover:from-rose-600 hover:to-purple-700 rounded-xl font-bold text-white shadow-lg shadow-rose-500/25 flex items-center justify-center gap-2">
                     <i data-lucide="wand-2" class="w-5 h-5"></i> Analyze & Build AI Dating Agent
                 </button>
             </form>
@@ -323,10 +378,11 @@ def index(request: Request):
         Agentic Dating Site &copy; 2026 · Autonomous Multi-Agent Matching System
     </footer>
 
-    <!-- Frontend App Script -->
+    <!-- App Frontend Logic -->
     <script>
         let allPeople = [];
-        let activeTab = 'directory';
+        let activeTab = 'arena';
+        let paceDelay = 1600; // default 1x video pace
 
         document.addEventListener('DOMContentLoaded', async () => {
             lucide.createIcons();
@@ -344,9 +400,19 @@ def index(request: Request):
             }
         }
 
+        function setPace(delay, btn) {
+            paceDelay = delay;
+            document.querySelectorAll('.pace-btn').forEach(b => {
+                b.classList.remove('active', 'bg-rose-500/20', 'text-rose-300', 'font-bold');
+                b.classList.add('text-slate-400');
+            });
+            btn.classList.add('active', 'bg-rose-500/20', 'text-rose-300', 'font-bold');
+            btn.classList.remove('text-slate-400');
+        }
+
         function switchTab(tab) {
             activeTab = tab;
-            ['directory', 'arena', 'rankings', 'ingest'].forEach(t => {
+            ['arena', 'directory', 'rankings', 'ingest'].forEach(t => {
                 const btn = document.getElementById(`tab-${t}`);
                 const view = document.getElementById(`view-${t}`);
                 if (t === tab) {
@@ -367,11 +433,10 @@ def index(request: Request):
         function renderDirectory(list) {
             const grid = document.getElementById('profiles-grid');
             grid.innerHTML = list.map(p => `
-                <div class="glass-panel rounded-2xl p-5 flex flex-col justify-between border border-slate-800 hover:border-pink-500/40 transition-all group">
+                <div class="glass-panel rounded-3xl p-5 flex flex-col justify-between border border-slate-800 hover:border-rose-500/40 transition-all group">
                     <div>
-                        <!-- Header avatar & info -->
                         <div class="flex items-start gap-4 mb-4">
-                            <img src="${p.avatar}" alt="${p.name}" class="w-14 h-14 rounded-2xl object-cover border-2 border-slate-700 group-hover:border-pink-500 transition-colors shadow-md">
+                            <img src="${p.avatar}" alt="${p.name}" class="w-14 h-14 rounded-2xl object-cover border-2 border-slate-700 group-hover:border-rose-500 transition-colors shadow-md">
                             <div class="flex-1 min-w-0">
                                 <h3 class="font-bold text-lg truncate">${p.name}</h3>
                                 <p class="text-xs text-slate-400 truncate">${p.headline}</p>
@@ -380,7 +445,7 @@ def index(request: Request):
                                         <i data-lucide="linkedin" class="w-3.5 h-3.5"></i> LinkedIn
                                     </a>
                                     <span>•</span>
-                                    <a href="${p.instagram_url}" target="_blank" class="hover:text-pink-400 flex items-center gap-1">
+                                    <a href="${p.instagram_url}" target="_blank" class="hover:text-rose-400 flex items-center gap-1">
                                         <i data-lucide="instagram" class="w-3.5 h-3.5"></i> Instagram
                                     </a>
                                 </div>
@@ -389,12 +454,11 @@ def index(request: Request):
 
                         <p class="text-xs text-slate-300 italic mb-4 line-clamp-2">"${p.bio_summary}"</p>
 
-                        <!-- Parsed Needs, Hobbies, Interests -->
                         <div class="space-y-3 text-xs">
                             <div>
-                                <span class="text-pink-400 font-bold uppercase tracking-wider block mb-1">❤️ Needs:</span>
+                                <span class="text-rose-400 font-bold uppercase tracking-wider block mb-1">❤️ Needs:</span>
                                 <div class="flex flex-wrap gap-1">
-                                    ${p.needs.map(n => `<span class="bg-pink-950/40 text-pink-300 border border-pink-800/40 px-2 py-0.5 rounded-md">${n}</span>`).join('')}
+                                    ${p.needs.map(n => `<span class="bg-rose-950/40 text-rose-300 border border-rose-800/40 px-2 py-0.5 rounded-md">${n}</span>`).join('')}
                                 </div>
                             </div>
 
@@ -416,7 +480,7 @@ def index(request: Request):
 
                     <div class="mt-5 pt-3 border-t border-slate-800/60 flex items-center justify-between">
                         <span class="text-xs text-slate-400">Agent Vibe: <strong class="text-slate-200">${p.qualities[0]}</strong></span>
-                        <button onclick="setupDateWith('${p.id}')" class="px-3 py-1.5 bg-slate-800 hover:bg-pink-600 hover:text-white rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5">
+                        <button onclick="setupDateWith('${p.id}')" class="px-3 py-1.5 bg-slate-800 hover:bg-rose-600 hover:text-white rounded-lg text-xs font-semibold transition-all flex items-center gap-1.5">
                             <i data-lucide="heart" class="w-3.5 h-3.5"></i> Date Agent
                         </button>
                     </div>
@@ -455,7 +519,7 @@ def index(request: Request):
             document.getElementById('select-person-1').value = personId;
             const other = allPeople.find(p => p.id !== personId);
             if (other) document.getElementById('select-person-2').value = other.id;
-            startSimulatedDate();
+            startAnimatedDate();
         }
 
         function speedDate() {
@@ -467,10 +531,10 @@ def index(request: Request):
             }
             document.getElementById('select-person-1').value = p1.id;
             document.getElementById('select-person-2').value = p2.id;
-            startSimulatedDate();
+            startAnimatedDate();
         }
 
-        async function startSimulatedDate() {
+        async function startAnimatedDate() {
             const p1_id = document.getElementById('select-person-1').value;
             const p2_id = document.getElementById('select-person-2').value;
 
@@ -481,8 +545,17 @@ def index(request: Request):
 
             const dateWindow = document.getElementById('date-window');
             const chatContainer = document.getElementById('chat-container');
+            const debriefContainer = document.getElementById('debrief-container');
+            const typingIndicator = document.getElementById('typing-indicator');
+
             dateWindow.classList.remove('hidden');
-            chatContainer.innerHTML = '<div class="text-center p-8 text-slate-400 animate-pulse">🤖 Agents initiating date simulation...</div>';
+            debriefContainer.classList.add('hidden');
+            chatContainer.innerHTML = '';
+            
+            // Reset Gauge
+            document.getElementById('gauge-bar').style.width = '0%';
+            document.getElementById('date-score-label').innerText = '0% Match';
+            document.getElementById('date-vibe-badge').innerText = '🤖 Agents Initializing...';
 
             try {
                 const res = await fetch('/api/date', {
@@ -493,35 +566,72 @@ def index(request: Request):
 
                 const data = await res.json();
                 
-                // Set Header Scores
-                document.getElementById('date-vibe-badge').innerText = data.compatibility.vibe_label;
-                document.getElementById('date-score').innerText = `${data.compatibility.score}% Match`;
+                // Set Location Header
+                document.getElementById('date-location-name').innerText = data.location.name;
+                document.getElementById('date-location-city').innerText = `${data.location.city} • ${data.location.vibe}`;
 
-                // Render Chat Dialogue
-                chatContainer.innerHTML = '';
-                data.dialogue.forEach((msg, idx) => {
+                const totalTurns = data.dialogue.length;
+                const finalScore = data.compatibility.score;
+
+                // Stream Dialogue Turns with Typing Indicators
+                for (let i = 0; i < totalTurns; i++) {
+                    const msg = data.dialogue[i];
                     const isP1 = msg.speaker_id === p1_id;
+
+                    if (paceDelay > 0) {
+                        // Show Typing Indicator
+                        document.getElementById('typing-avatar').src = msg.speaker_avatar;
+                        document.getElementById('typing-name').innerText = msg.speaker_name;
+                        typingIndicator.classList.remove('hidden');
+                        chatContainer.scrollTop = chatContainer.scrollHeight;
+
+                        await new Promise(r => setTimeout(r, paceDelay));
+                        typingIndicator.classList.add('hidden');
+                    }
+
+                    // Render Bubble with Internal Monologue
                     const b = document.createElement('div');
                     b.className = `chat-bubble flex items-start gap-3 ${isP1 ? '' : 'flex-row-reverse'}`;
                     b.innerHTML = `
-                        <img src="${msg.speaker_avatar}" class="w-9 h-9 rounded-full object-cover border border-slate-700">
-                        <div class="max-w-[75%] p-3.5 rounded-2xl text-xs sm:text-sm ${isP1 ? 'bg-pink-950/50 border border-pink-800/40 text-pink-100 rounded-tl-none' : 'bg-purple-950/50 border border-purple-800/40 text-purple-100 rounded-tr-none'}">
-                            <div class="font-bold text-[10px] uppercase opacity-75 mb-1">${msg.speaker_name} • Round ${msg.round}: ${msg.title}</div>
-                            <p>${msg.message}</p>
+                        <img src="${msg.speaker_avatar}" class="w-10 h-10 rounded-2xl object-cover border border-slate-700 shadow-md">
+                        <div class="max-w-[80%] space-y-1.5">
+                            <!-- Internal Thought Pill -->
+                            <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-medium ${isP1 ? 'bg-rose-950/60 text-rose-300 border border-rose-800/50' : 'bg-purple-950/60 text-purple-300 border border-purple-800/50'}">
+                                <i data-lucide="brain" class="w-3 h-3"></i> Agent Thought: ${msg.agent_thought}
+                            </div>
+                            <!-- Spoken Dialogue Message -->
+                            <div class="p-4 rounded-2xl text-xs sm:text-sm leading-relaxed ${isP1 ? 'bg-slate-900 border border-rose-500/30 text-slate-100 rounded-tl-none shadow-lg shadow-rose-950/20' : 'bg-slate-900 border border-purple-500/30 text-slate-100 rounded-tr-none shadow-lg shadow-purple-950/20'}">
+                                <div class="font-extrabold text-[10px] uppercase tracking-wider opacity-75 mb-1 ${isP1 ? 'text-rose-400' : 'text-purple-400'}">${msg.speaker_name} • Round ${msg.round}: ${msg.stage}</div>
+                                <p>${msg.message}</p>
+                            </div>
                         </div>
                     `;
                     chatContainer.appendChild(b);
-                });
+                    lucide.createIcons();
+                    chatContainer.scrollTop = chatContainer.scrollHeight;
 
-                // Debriefs
+                    // Progressively update gauge
+                    const currentGauge = Math.round(((i + 1) / totalTurns) * finalScore);
+                    document.getElementById('gauge-bar').style.width = `${currentGauge}%`;
+                    document.getElementById('date-score-label').innerText = `${currentGauge}% Match`;
+                }
+
+                // Final Completion
+                document.getElementById('date-vibe-badge').innerText = data.compatibility.vibe_label;
+                
+                // Show Debrief Stats
+                document.getElementById('stat-chem').innerText = `${data.compatibility.breakdown.chemistry}%`;
+                document.getElementById('stat-intel').innerText = `${data.compatibility.breakdown.intellectual}%`;
+                document.getElementById('stat-fun').innerText = `${data.compatibility.breakdown.fun_factor}%`;
+                document.getElementById('stat-long').innerText = `${data.compatibility.breakdown.longterm}%`;
+
                 document.getElementById('debrief-text-1').innerText = data.p1_debrief;
                 document.getElementById('debrief-text-2').innerText = data.p2_debrief;
-
-                chatContainer.scrollTop = chatContainer.scrollHeight;
-                lucide.createIcons();
+                debriefContainer.classList.remove('hidden');
 
             } catch (err) {
-                chatContainer.innerHTML = '<div class="text-red-400 p-4">Error running date simulation.</div>';
+                console.error("Error during animated date:", err);
+                chatContainer.innerHTML = '<div class="text-rose-400 p-4">Error running animated date simulation.</div>';
             }
         }
 
@@ -536,9 +646,9 @@ def index(request: Request):
                 const tbody = document.getElementById('rankings-table-body');
                 tbody.innerHTML = rankings.map(r => `
                     <tr class="hover:bg-slate-900/50 transition-colors">
-                        <td class="p-4 font-extrabold text-pink-400">#${r.rank}</td>
+                        <td class="p-4 font-extrabold text-rose-400">#${r.rank}</td>
                         <td class="p-4 flex items-center gap-3">
-                            <img src="${r.avatar}" class="w-10 h-10 rounded-xl object-cover border border-slate-700">
+                            <img src="${r.avatar}" class="w-10 h-10 rounded-2xl object-cover border border-slate-700">
                             <div>
                                 <strong class="block text-white font-semibold">${r.name}</strong>
                                 <span class="text-xs text-slate-500">${r.vibe_label}</span>
@@ -548,14 +658,14 @@ def index(request: Request):
                         <td class="p-4">
                             <div class="flex items-center gap-2">
                                 <div class="w-16 bg-slate-800 h-2 rounded-full overflow-hidden">
-                                    <div class="bg-gradient-to-r from-pink-500 to-purple-500 h-full" style="width: ${r.score}%"></div>
+                                    <div class="bg-gradient-to-r from-rose-500 to-purple-500 h-full" style="width: ${r.score}%"></div>
                                 </div>
                                 <span class="font-bold text-sm text-slate-200">${r.score}%</span>
                             </div>
                         </td>
                         <td class="p-4 text-xs font-semibold text-purple-300">${r.vibe_label}</td>
                         <td class="p-4 text-right">
-                            <button onclick="setupDateWithCandidate('${pId}', '${r.person_id}')" class="px-3 py-1.5 bg-pink-600/20 text-pink-300 border border-pink-500/40 hover:bg-pink-600 hover:text-white rounded-lg text-xs font-bold transition-all">
+                            <button onclick="setupDateWithCandidate('${pId}', '${r.person_id}')" class="px-3 py-1.5 bg-rose-600/20 text-rose-300 border border-rose-500/40 hover:bg-rose-600 hover:text-white rounded-xl text-xs font-bold transition-all">
                                 Watch Date
                             </button>
                         </td>
@@ -570,7 +680,7 @@ def index(request: Request):
             switchTab('arena');
             document.getElementById('select-person-1').value = p1_id;
             document.getElementById('select-person-2').value = p2_id;
-            startSimulatedDate();
+            startAnimatedDate();
         }
 
         async function handleIngest(e) {
@@ -582,7 +692,7 @@ def index(request: Request):
             const ig = document.getElementById('ingest-instagram').value;
 
             btn.disabled = true;
-            btn.innerHTML = '🤖 Analyzing Links & Synthesizing AI Agent...';
+            btn.innerHTML = '🤖 Analyzing Links & Building AI Agent...';
 
             try {
                 const res = await fetch('/api/analyze', {
