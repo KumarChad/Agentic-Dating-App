@@ -9,7 +9,7 @@ from app.scraper import ProfileAnalyzer
 from app.dating_engine import DatingEngine
 from app.rankings import RankingManager
 
-app = FastAPI(title="Agentic Dating Site", version="2.0.0")
+app = FastAPI(title="Agentic Dating Site", version="2.1.0")
 
 DATA_PATH = os.path.join(os.path.dirname(os.path.dirname(__file__)), "data", "people.json")
 
@@ -178,7 +178,6 @@ def index(request: Request):
                 </div>
                 
                 <div class="flex items-center gap-3">
-                    <!-- Pace Selector -->
                     <div class="bg-slate-900 border border-slate-800 p-1 rounded-xl flex items-center gap-1 text-xs">
                         <span class="text-slate-400 px-2 font-medium">Speed:</span>
                         <button onclick="setPace(1600, this)" class="pace-btn active bg-rose-500/20 text-rose-300 font-bold px-2.5 py-1 rounded-lg">1x (Video)</button>
@@ -196,11 +195,11 @@ def index(request: Request):
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div class="glass-panel p-5 rounded-3xl border border-rose-500/20">
                     <label class="block text-xs font-bold text-rose-400 uppercase tracking-wider mb-2">Agent 1 (Person A)</label>
-                    <select id="select-person-1" onchange="previewAgent(1)" class="w-full bg-slate-900/90 border border-slate-700 rounded-2xl p-3 text-sm font-medium focus:outline-none focus:border-rose-500"></select>
+                    <select id="select-person-1" class="w-full bg-slate-900/90 border border-slate-700 rounded-2xl p-3 text-sm font-medium focus:outline-none focus:border-rose-500"></select>
                 </div>
                 <div class="glass-panel p-5 rounded-3xl border border-purple-500/20">
                     <label class="block text-xs font-bold text-purple-400 uppercase tracking-wider mb-2">Agent 2 (Person B)</label>
-                    <select id="select-person-2" onchange="previewAgent(2)" class="w-full bg-slate-900/90 border border-slate-700 rounded-2xl p-3 text-sm font-medium focus:outline-none focus:border-purple-500"></select>
+                    <select id="select-person-2" class="w-full bg-slate-900/90 border border-slate-700 rounded-2xl p-3 text-sm font-medium focus:outline-none focus:border-purple-500"></select>
                 </div>
             </div>
 
@@ -211,9 +210,7 @@ def index(request: Request):
             </div>
 
             <!-- Date Viewer Window -->
-            <div id="date-window" class="hidden glass-panel rounded-3xl p-6 border border-slate-800 space-y-6 shadow-2xl">
-                
-                <!-- Date Location Header & Live Compatibility Gauge -->
+            <div id="date-window" class="glass-panel rounded-3xl p-6 border border-slate-800 space-y-6 shadow-2xl">
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 items-center p-4 bg-slate-900/90 rounded-2xl border border-slate-800">
                     <div>
                         <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Date Setting & Location</span>
@@ -230,16 +227,12 @@ def index(request: Request):
                     </div>
 
                     <div class="text-right">
-                        <span id="date-vibe-badge" class="px-3 py-1.5 bg-rose-500/20 text-rose-300 border border-rose-500/30 rounded-full text-xs font-bold inline-block">Initializing Date...</span>
+                        <span id="date-vibe-badge" class="px-3 py-1.5 bg-rose-500/20 text-rose-300 border border-rose-500/30 rounded-full text-xs font-bold inline-block">Initializing...</span>
                     </div>
                 </div>
 
-                <!-- Chat Stream Window -->
-                <div id="chat-container" class="space-y-6 max-h-[500px] overflow-y-auto p-5 bg-slate-950/80 rounded-2xl border border-slate-900">
-                    <!-- Dynamic animated chat bubbles -->
-                </div>
+                <div id="chat-container" class="space-y-6 max-h-[500px] overflow-y-auto p-5 bg-slate-950/80 rounded-2xl border border-slate-900"></div>
 
-                <!-- Typing Indicator Banner -->
                 <div id="typing-indicator" class="hidden flex items-center gap-3 p-3 bg-slate-900/60 rounded-xl text-xs text-slate-400">
                     <img id="typing-avatar" src="" class="w-6 h-6 rounded-full object-cover">
                     <span id="typing-name" class="font-bold text-slate-200">Agent</span> is thinking...
@@ -250,9 +243,7 @@ def index(request: Request):
                     </div>
                 </div>
 
-                <!-- Post-Date Breakdown & Agent Debrief Cards -->
                 <div id="debrief-container" class="hidden space-y-4">
-                    <!-- Multi-Factor Radar Stats -->
                     <div class="grid grid-cols-2 md:grid-cols-4 gap-3 text-center">
                         <div class="p-3 bg-slate-900/80 border border-slate-800 rounded-xl">
                             <span class="text-[10px] font-bold text-rose-400 uppercase tracking-wider block">Chemistry</span>
@@ -272,7 +263,6 @@ def index(request: Request):
                         </div>
                     </div>
 
-                    <!-- Debrief Reviews -->
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div class="p-4 bg-rose-950/20 border border-rose-900/40 rounded-2xl">
                             <h4 id="debrief-title-1" class="text-xs font-bold text-rose-400 uppercase tracking-wider mb-1">Agent 1 Verdict</h4>
@@ -382,11 +372,24 @@ def index(request: Request):
     <script>
         let allPeople = [];
         let activeTab = 'arena';
-        let paceDelay = 1600; // default 1x video pace
+        let paceDelay = 0; // Instant by default for pre-run URL deep links
 
         document.addEventListener('DOMContentLoaded', async () => {
             lucide.createIcons();
             await loadPeopleData();
+            
+            // Auto-load based on URL hash (Demo link support)
+            const hash = window.location.hash.replace('#', '');
+            if (['arena', 'directory', 'rankings', 'ingest'].includes(hash)) {
+                switchTab(hash);
+            }
+            
+            // Automatically launch pre-run date so demo link displays instant results out of the box!
+            if (allPeople.length > 1) {
+                document.getElementById('select-person-1').value = 'person_1'; // Bill Gates
+                document.getElementById('select-person-2').value = 'person_10'; // Sara Blakely
+                startAnimatedDate();
+            }
         });
 
         async function loadPeopleData() {
@@ -412,6 +415,7 @@ def index(request: Request):
 
         function switchTab(tab) {
             activeTab = tab;
+            window.location.hash = tab;
             ['arena', 'directory', 'rankings', 'ingest'].forEach(t => {
                 const btn = document.getElementById(`tab-${t}`);
                 const view = document.getElementById(`view-${t}`);
@@ -551,11 +555,6 @@ def index(request: Request):
             dateWindow.classList.remove('hidden');
             debriefContainer.classList.add('hidden');
             chatContainer.innerHTML = '';
-            
-            // Reset Gauge
-            document.getElementById('gauge-bar').style.width = '0%';
-            document.getElementById('date-score-label').innerText = '0% Match';
-            document.getElementById('date-vibe-badge').innerText = '🤖 Agents Initializing...';
 
             try {
                 const res = await fetch('/api/date', {
@@ -566,20 +565,17 @@ def index(request: Request):
 
                 const data = await res.json();
                 
-                // Set Location Header
                 document.getElementById('date-location-name').innerText = data.location.name;
                 document.getElementById('date-location-city').innerText = `${data.location.city} • ${data.location.vibe}`;
 
                 const totalTurns = data.dialogue.length;
                 const finalScore = data.compatibility.score;
 
-                // Stream Dialogue Turns with Typing Indicators
                 for (let i = 0; i < totalTurns; i++) {
                     const msg = data.dialogue[i];
                     const isP1 = msg.speaker_id === p1_id;
 
                     if (paceDelay > 0) {
-                        // Show Typing Indicator
                         document.getElementById('typing-avatar').src = msg.speaker_avatar;
                         document.getElementById('typing-name').innerText = msg.speaker_name;
                         typingIndicator.classList.remove('hidden');
@@ -589,17 +585,14 @@ def index(request: Request):
                         typingIndicator.classList.add('hidden');
                     }
 
-                    // Render Bubble with Internal Monologue
                     const b = document.createElement('div');
                     b.className = `chat-bubble flex items-start gap-3 ${isP1 ? '' : 'flex-row-reverse'}`;
                     b.innerHTML = `
                         <img src="${msg.speaker_avatar}" class="w-10 h-10 rounded-2xl object-cover border border-slate-700 shadow-md">
                         <div class="max-w-[80%] space-y-1.5">
-                            <!-- Internal Thought Pill -->
                             <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-medium ${isP1 ? 'bg-rose-950/60 text-rose-300 border border-rose-800/50' : 'bg-purple-950/60 text-purple-300 border border-purple-800/50'}">
                                 <i data-lucide="brain" class="w-3 h-3"></i> Agent Thought: ${msg.agent_thought}
                             </div>
-                            <!-- Spoken Dialogue Message -->
                             <div class="p-4 rounded-2xl text-xs sm:text-sm leading-relaxed ${isP1 ? 'bg-slate-900 border border-rose-500/30 text-slate-100 rounded-tl-none shadow-lg shadow-rose-950/20' : 'bg-slate-900 border border-purple-500/30 text-slate-100 rounded-tr-none shadow-lg shadow-purple-950/20'}">
                                 <div class="font-extrabold text-[10px] uppercase tracking-wider opacity-75 mb-1 ${isP1 ? 'text-rose-400' : 'text-purple-400'}">${msg.speaker_name} • Round ${msg.round}: ${msg.stage}</div>
                                 <p>${msg.message}</p>
@@ -610,16 +603,13 @@ def index(request: Request):
                     lucide.createIcons();
                     chatContainer.scrollTop = chatContainer.scrollHeight;
 
-                    // Progressively update gauge
                     const currentGauge = Math.round(((i + 1) / totalTurns) * finalScore);
                     document.getElementById('gauge-bar').style.width = `${currentGauge}%`;
                     document.getElementById('date-score-label').innerText = `${currentGauge}% Match`;
                 }
 
-                // Final Completion
                 document.getElementById('date-vibe-badge').innerText = data.compatibility.vibe_label;
                 
-                // Show Debrief Stats
                 document.getElementById('stat-chem').innerText = `${data.compatibility.breakdown.chemistry}%`;
                 document.getElementById('stat-intel').innerText = `${data.compatibility.breakdown.intellectual}%`;
                 document.getElementById('stat-fun').innerText = `${data.compatibility.breakdown.fun_factor}%`;
